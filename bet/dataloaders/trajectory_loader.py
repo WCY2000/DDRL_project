@@ -96,7 +96,7 @@ class RelayKitchenMultiviewTrajectoryDataset(Dataset):
         )
         obs = video_reader.get_batch(frames)
         obs = torch.tensor(obs.asnumpy())
-        print("obs shape", obs.shape)
+        # print("obs shape", obs.shape)
         # left_view = obs[:, :, :224, :]
         # right_view = obs[:, :, 224:, :]
         # obs = torch.stack([left_view, right_view], dim=1)

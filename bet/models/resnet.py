@@ -9,7 +9,7 @@ class resnet18(nn.Module):
         self,
         pretrained: bool = True,
         freeze_pretrained: bool = True,
-        output_dim: int = 512,  # fixed for resnet18; included for consistency with config
+        output_dim: int = 256,  # fixed for resnet18; included for consistency with config
     ):
         super().__init__()
         resnet = torchvision.models.resnet18(pretrained=pretrained)

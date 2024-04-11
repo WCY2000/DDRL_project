@@ -134,6 +134,7 @@ class GPT(nn.Module):
         # input embedding stem
         if config.discrete_input:
             self.tok_emb = nn.Embedding(config.vocab_size, config.n_embd)
+
         else:
             self.tok_emb = nn.Linear(config.input_size, config.n_embd)
         self.discrete_input = config.discrete_input

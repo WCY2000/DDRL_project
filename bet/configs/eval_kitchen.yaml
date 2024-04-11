@@ -1,12 +1,12 @@
 defaults:
   - _self_
-  - encoder: identity
+  - encoder: resnet
   - action_ae: discretizers/k_means_kitchen_best
   - env: relay_kitchen_traj
   - state_prior: mingpt_kitchen_best
   - env_vars: env_vars
 
-lazy_init_models: True
+lazy_init_models: False
 
 device: cuda
 seed: 42
@@ -22,16 +22,29 @@ use_state_prior: True
 enable_offsets: True
 action_update_every: 1
 flatten_obs: False
-enable_render: True
+enable_render: False
 
 # Plotting setup
 plot_interactions: False
 start_from_seen: False
-record_video: True
+record_video: False
 
 # Wandb setup
 project: behavior_transformer_repro_test
 experiment: kitchen_eval
+
+# Training details
+num_training_epochs: 1
+data_parallel: False
+optim: Adam
+save_latents: False
+
+lr: 1e-4
+weight_decay: 0.1
+betas:
+  - 0.9
+  - 0.95
+grad_norm_clip: 1.0
 
 hydra:
   job:

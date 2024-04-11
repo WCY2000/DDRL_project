@@ -10,7 +10,7 @@ def main(cfg):
     workspace = hydra.utils.instantiate(cfg.env.workspace, cfg=cfg, _recursive_=False)
     rewards, infos = workspace.run()
     print(rewards)
-    print(infos)
+    # print(infos)
     print(f"Average reward: {np.mean(rewards)}")
     print(f"Std: {np.std(rewards)}")
 

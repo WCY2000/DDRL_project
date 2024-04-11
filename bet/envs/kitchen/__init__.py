@@ -205,3 +205,8 @@ class KitchenMultiviewBase(KitchenBase):
         proprio = state[:7]
         obs = np.stack(imgs, axis=0)  # V C H W
         return obs / 255.0
+
+    def reset(self):
+        _ = super(KitchenBase, self).reset()
+        obs = self._get_obs()
+        return obs, {}

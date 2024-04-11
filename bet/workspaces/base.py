@@ -70,6 +70,7 @@ class Workspace:
         if self.obs_encoding_net is None:  # possibly already initialized from snapshot
             self.obs_encoding_net = hydra.utils.instantiate(self.cfg.encoder)
             self.obs_encoding_net = self.obs_encoding_net.to(self.device)
+            # print("<<<<<<<<line 73", self.obs_encoding_net)
             if self.cfg.data_parallel:
                 self.obs_encoding_net = torch.nn.DataParallel(self.obs_encoding_net)
 
@@ -102,6 +103,8 @@ class Workspace:
         action_history = []
         latent_history = []
         obs = self.env.reset()
+        # print("<< obs", len(obs), obs[0].shape)
+        obs = obs[0]
         last_obs = obs
         if self.cfg.start_from_seen:
             obs = self._start_from_known()
@@ -133,7 +136,7 @@ class Workspace:
             action_history.append(action)
             latent_history.append(latents)
         logging.info(f"Total reward: {total_reward}")
-        logging.info(f"Final info: {info}")
+        # logging.info(f"Final info: {info}")
         return total_reward, obs_history, action_history, latent_history, info
 
     def _report_result_upon_completion(self):
@@ -148,10 +151,15 @@ class Workspace:
             self.action_ae, self.obs_encoding_net, self.state_prior, no_grad=True
         ):
             obs = torch.from_numpy(obs).float().to(self.cfg.device).unsqueeze(0)
+            # print("<<< obs from get action", obs.shape)
+            self.obs_encoding_net = hydra.utils.instantiate(self.cfg.encoder)
+            self.obs_encoding_net = self.obs_encoding_net.to(self.device)
             enc_obs = self.obs_encoding_net(obs).squeeze(0)
-            enc_obs = einops.repeat(
-                enc_obs, "obs -> batch obs", batch=self.cfg.action_batch_size
-            )
+            # print(self.obs_encoding_net)
+            # print("<<< enc_obs from obs_encoding_net", enc_obs.shape)
+            # enc_obs = einops.repeat(
+            #     enc_obs, "obs -> batch obs", batch=self.cfg.action_batch_size
+            # )
             # Now, add to history. This automatically handles the case where
             # the history is full.
             self.history.append(enc_obs)

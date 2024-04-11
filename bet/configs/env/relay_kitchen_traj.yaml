@@ -6,7 +6,8 @@ action_dim: 9
 action_min: null
 action_max: null
 
-load_dir: "/home/chenyu/Desktop/DDRL_project/bet/exp_local/2024.04.02/113841_kitchen_train"
+# load_dir: "/home/chenyu/Desktop/DDRL_project/bet/exp_local/2024.04.02/113841_kitchen_train" # original
+load_dir: "/home/chenyu/Desktop/DDRL_project/bet/exp_local/2024.04.11/133911_kitchen_train" #resnet 512
 
 workspace:
   _target_: workspaces.adept_kitchen.AdeptKitchenWorkspace

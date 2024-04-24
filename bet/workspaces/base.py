@@ -67,10 +67,11 @@ class Workspace:
                 self.action_ae = GeneratorDataParallel(self.action_ae)
 
     def _init_obs_encoding_net(self):
+        print("<<<<<<<<line 70", self.obs_encoding_net)
         if self.obs_encoding_net is None:  # possibly already initialized from snapshot
             self.obs_encoding_net = hydra.utils.instantiate(self.cfg.encoder)
             self.obs_encoding_net = self.obs_encoding_net.to(self.device)
-            # print("<<<<<<<<line 73", self.obs_encoding_net)
+            print("<<<<<<<<line 73", self.obs_encoding_net)
             if self.cfg.data_parallel:
                 self.obs_encoding_net = torch.nn.DataParallel(self.obs_encoding_net)
 
@@ -150,11 +151,11 @@ class Workspace:
         with utils.eval_mode(
             self.action_ae, self.obs_encoding_net, self.state_prior, no_grad=True
         ):
-            obs = torch.from_numpy(obs).float().to(self.cfg.device).unsqueeze(0)
+            obs = torch.from_numpy(obs).float().to(self.cfg.device)
             # print("<<< obs from get action", obs.shape)
-            self.obs_encoding_net = hydra.utils.instantiate(self.cfg.encoder)
-            self.obs_encoding_net = self.obs_encoding_net.to(self.device)
-            enc_obs = self.obs_encoding_net(obs).squeeze(0)
+            # self.obs_encoding_net = hydra.utils.instantiate(self.cfg.encoder)
+            # self.obs_encoding_net = self.obs_encoding_net.to(self.device)
+            enc_obs = self.obs_encoding_net(obs)
             # print(self.obs_encoding_net)
             # print("<<< enc_obs from obs_encoding_net", enc_obs.shape)
             # enc_obs = einops.repeat(

@@ -1,8 +1,6 @@
 import torch
-from base import BaseVAE
 from torch import nn
 from torch.nn import functional as F
-# from .types_ import *
 import yaml
 import os
 from typing import List, Callable, Union, Any, TypeVar, Tuple
@@ -10,8 +8,42 @@ from typing import List, Callable, Union, Any, TypeVar, Tuple
 from torch import tensor as Tensor
 TRAIN = True
 
+from torch import nn
+from abc import abstractmethod
+
+from typing import List, Callable, Union, Any, TypeVar, Tuple
+
+from torch import tensor as Tensor
+
 Tensor = TypeVar("torch.tensor")
-checkpoint_path =  "/home/chenyu/Desktop/DDRL_project/DipVAE/logs/DIPVAE/dipvae_ckpt/checkpoints/epoch=20-step=3716.ckpt"
+
+
+class BaseVAE(nn.Module):
+    def __init__(self) -> None:
+        super(BaseVAE, self).__init__()
+
+    def encode(self, input: Tensor) -> List[Tensor]:
+        raise NotImplementedError
+
+    def decode(self, input: Tensor) -> Any:
+        raise NotImplementedError
+
+    def sample(self, batch_size: int, current_device: int, **kwargs) -> Tensor:
+        raise NotImplementedError
+
+    def generate(self, x: Tensor, **kwargs) -> Tensor:
+        raise NotImplementedError
+
+    @abstractmethod
+    def forward(self, *inputs: Tensor) -> Tensor:
+        pass
+
+    @abstractmethod
+    def loss_function(self, *inputs: Any, **kwargs) -> Tensor:
+        pass
+
+Tensor = TypeVar("torch.tensor")
+checkpoint_path =  "/home/chenyu/Desktop/DDRL_project/DipVAE/logs/DIPVAE/dipvae_ckpt_full/checkpoints/epoch=19-step=19919.ckpt"
 
 class DIPVAE(BaseVAE):
     def __init__(
@@ -153,11 +185,19 @@ class DIPVAE(BaseVAE):
         return eps * std + mu
 
     def forward(self, input: Tensor, **kwargs) -> List[Tensor]:
+        # print("<< input", input.shape)
+        input = F.interpolate(input, size=(256, 256), mode='bilinear', align_corners=False)
+        x = input
+        # is_seq = x.dim() == 5
+        # if is_seq:
+        #     n = x.shape[0]
+        #     t = x.shape[1]
+        #     x = rearrange(x, "n t c h w -> (n t) c h w")
+
         mu, log_var = self.encode(input)
         z = self.reparameterize(mu, log_var)
-        print("z-latent shape", z.shape)
-
-        return [self.decode(z), input, mu, log_var]
+        # print("<<< z shape", z.shape)
+        return mu
 
     def loss_function(self, *args, **kwargs) -> dict:
         """
@@ -237,26 +277,26 @@ class DIPVAE(BaseVAE):
 
 
 
-from PIL import Image
-import torchvision.transforms as transforms
+# from PIL import Image
+# import torchvision.transforms as transforms
 
-# Path to your image file
-image_path = '/home/chenyu/Desktop/DDRL_project/DipVAE/dataset/train/0_0000.jpg'
-image = Image.open(image_path).convert('RGB')  # Ensure image is in RGB format
-print(image.size)
-# Define the transformations
-transform = transforms.Compose([
-    transforms.Resize((256, 256)),
-    transforms.ToTensor()
+# # Path to your image file
+# image_path = '/home/chenyu/Desktop/DDRL_project/DipVAE/dataset/train/0_0000.jpg'
+# image = Image.open(image_path).convert('RGB')  # Ensure image is in RGB format
+# print(image.size)
+# # Define the transformations
+# transform = transforms.Compose([
+#     transforms.Resize((256, 256)),
+#     transforms.ToTensor()
 
-])
-input_image = transform(image)
-model = DIPVAE()
-print("Image", input_image.shape)
-input_image = input_image.unsqueeze(0)
-# ckpt = torch.load(checkpoint_path)
-# model.load_state_dict(ckpt["state_dict"])
-model.eval()
-with torch.no_grad():
-    reconstructed_image, _, _, _ = model(input_image)
-print(reconstructed_image)
+# ])
+# input_image = transform(image)
+# model = DIPVAE()
+# print("Image", input_image.shape)
+# input_image = input_image.unsqueeze(0)
+# # ckpt = torch.load(checkpoint_path)
+# # model.load_state_dict(ckpt["state_dict"])
+# model.eval()
+# with torch.no_grad():
+#     reconstructed_image, _, _, _ = model(input_image)
+# print(reconstructed_image)

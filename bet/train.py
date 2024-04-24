@@ -67,8 +67,10 @@ class Workspace:
                 self.action_ae = GeneratorDataParallel(self.action_ae)
 
     def _init_obs_encoding_net(self):
+        # print("<<<<<<<<line 70", self.obs_encoding_net)
         if self.obs_encoding_net is None:  # possibly already initialized from snapshot
             self.obs_encoding_net = hydra.utils.instantiate(self.cfg.encoder)
+            # print("<<<<<<<<line 73", self.obs_encoding_net)
             self.obs_encoding_net = self.obs_encoding_net.to(self.device)
             if self.cfg.data_parallel:
                 self.obs_encoding_net = torch.nn.DataParallel(self.obs_encoding_net)
@@ -123,7 +125,9 @@ class Workspace:
                 observations, action, mask = data
                 self.state_prior_optimizer.zero_grad(set_to_none=True)
                 obs, act = observations.to(self.device), action.to(self.device)
-                enc_obs = self.obs_encoding_net(obs)
+                # print("<<< eval obs", obs.shape)
+                # enc_obs = self.obs_encoding_net(obs)
+                enc_obs = obs
                 latent = self.action_ae.encode_into_latent(act, enc_obs)
                 _, loss, loss_components = self.state_prior.get_latent_and_loss(
                     obs_rep=enc_obs,
@@ -143,7 +147,9 @@ class Workspace:
         ):
             for observations, action, mask in self.test_loader:
                 obs, act = observations.to(self.device), action.to(self.device)
-                enc_obs = self.obs_encoding_net(obs)
+                # print("<<< eval obs", obs.shape)
+                # enc_obs = self.obs_encoding_net(obs)
+                enc_obs = obs
                 latent = self.action_ae.encode_into_latent(act, enc_obs)
                 _, loss, loss_components = self.state_prior.get_latent_and_loss(
                     obs_rep=enc_obs,

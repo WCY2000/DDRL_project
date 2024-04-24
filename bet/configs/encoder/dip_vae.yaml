@@ -1,0 +1,2 @@
+_target_: models.dip_vae.DIPVAE
+output_dim: 64

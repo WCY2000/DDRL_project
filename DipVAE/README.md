@@ -9,3 +9,4 @@ python video2img.py
 select validation set and put images in /dataset/val
 python run.py
 ```
+You can find the checkpoints in `/logs/DIPVAE`

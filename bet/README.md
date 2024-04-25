@@ -33,7 +33,6 @@ In this repository, you can find the code to reproduce Behavior Transformer (BeT
   git clone https://github.com/google-research/relay-policy-learning
   ```
 - Install MuJoCo 2.1.0: https://github.com/openai/mujoco-py#install-mujoco
-- Install CARLA server 0.9.13: https://carla.readthedocs.io/en/0.9.13/start_quickstart/#a-debian-carla-installation
 - To enable logging, log in with a `wandb` account:
   ```
   wandb login
@@ -49,9 +48,7 @@ Datasets used for training will be available at this OSF link: [https://osf.io/9
 - Activate the conda environment with `conda activate behavior-transformer`.
 - In the extracted folder, run `python3 process_carla.py carla` to preprocess the CARLA dataset into tensors.
 - In `./config/env_vars/env_vars.yaml`, set the dataset paths to the unzipped directories.
-  - `carla_multipath_town04_merge`: CARLA environment
   - `relay_kitchen`: Franka kitchen environment
-  - `multimodal_push_fixed_target`: Block push environment
 
 ## Reproducing experiments
 The following assumes our current working directory is the root folder of this project repository.
@@ -67,24 +64,13 @@ To reproduce the experiment results, the overall steps are:
 
 See below for detailed steps for each environment.
 
-### CARLA
 
-- Train:
-  ```
-  python3 train.py --config-name=train_carla
-  ```
-  Snapshots will be saved to a new timestamped directory `./exp_local/{date}/{time}_carla_train`
-- In `configs/env/carla_multipath_merge_town04_traj_rep.yaml`, set `load_dir` to the absolute path of the directory above.
-- Evaluation:
-  ```
-  python3 run_on_env.py --config-name=eval_carla
-  ```
 
 ### Franka kitchen
 
 - Train:
   ```
-  python3 train.py --config-name=train_kitchen
+  python3 train.py --config-name=train_kitchen_dipvae
   ```
   Snapshots will be saved to a new timestamped directory `./exp_local/{date}/{time}_kitchen_train`
 - In `configs/env/relay_kitchen_traj.yaml`, set `load_dir` to the absolute path of the directory above.

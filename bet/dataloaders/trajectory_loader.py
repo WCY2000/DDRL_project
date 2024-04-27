@@ -52,10 +52,13 @@ class RelayKitchenTrajectoryDataset(TensorDataset):
         return torch.cat(result, dim=0)
 
 def transpose_batch_timestep(*args):
-    return (einops.rearrange(arg, "b t ... -> t b ...") for arg in args)
+    if len(args) == 1:
+        return einops.rearrange(args[0], "b t ... -> t b ...")
+    else:
+        return (einops.rearrange(arg, "b t ... -> t b ...") for arg in args)
 
 class RelayKitchenMultiviewTrajectoryDataset(Dataset):
-    def __init__(self, data_directory, onehot_goals=False):
+    def __init__(self, data_directory, onehot_goals=True):
         data_directory = Path(data_directory)
         self.data_directory = data_directory
         self.onehot_goals = onehot_goals
@@ -71,9 +74,13 @@ class RelayKitchenMultiviewTrajectoryDataset(Dataset):
         self.actions = actions
         self.masks = masks
 
+        print(f"states shape {states.shape}")
+        goal_dir = "/nas/datasets/relay_kitchen_dataset/onehot_goals.pth"
         if onehot_goals:
-            goals = torch.load(data_directory / "onehot_goals.pth")
-            goals = transpose_batch_timestep(goals)[0]
+            goals = torch.load(goal_dir)
+            print(f" goal shape {goals.shape}")
+            goals = transpose_batch_timestep(goals)
+            print(f"transposed goals {goals.shape}")
             self.goals = goals
 
     def get_seq_length(self, idx):
@@ -433,6 +440,7 @@ class TrajectoryRepDataset(Dataset):
         postprocess: Callable[[torch.Tensor], torch.Tensor] = None,
         device: Union[torch.device, str] = "cuda",
         batch_size: Optional[int] = 128,
+        onehot_goals=True
     ):
         """
         Given a trajectory dataset, encode its states into representations.
@@ -456,7 +464,11 @@ class TrajectoryRepDataset(Dataset):
         self.postprocess = postprocess
         with eval_mode(encoder, no_grad=True):
             for i in tqdm(range(len(trajectory_dataset))):
-                obs, act, mask = trajectory_dataset[i]
+                if onehot_goals:
+                    obs, act, mask, goal = trajectory_dataset[i]
+                    # print(goal[0], obs.shape)
+                else:
+                    obs, act, mask = trajectory_dataset[i]
                 if preprocess is not None:
                     obs = preprocess(obs)
                 if batch_size is not None:

@@ -120,20 +120,26 @@ class LangSAM:
         transformed_boxes = self.sam.transform.apply_boxes_torch(
             boxes, image_array.shape[:2]
         )
-        masks, _, _ = self.sam.predict_torch(
+
+        # Extracting only embeddings not masks
+        # masks, _, _ = self.sam.predict_torch(
+        embeddings = self.sam.predict_torch(
             point_coords=None,
             point_labels=None,
             boxes=transformed_boxes.to(self.sam.device),
             multimask_output=False,
         )
-        return masks.cpu()
+        # return masks.cpu()
+        return embeddings
 
     def predict(self, image_pil, text_prompt, box_threshold=0.3, text_threshold=0.25):
         boxes, logits, phrases = self.predict_dino(
             image_pil, text_prompt, box_threshold, text_threshold
         )
         masks = torch.tensor([])
+        embeddings = torch.tensor([])
         if len(boxes) > 0:
-            masks = self.predict_sam(image_pil, boxes)
-            masks = masks.squeeze(1)
-        return masks, boxes, phrases, logits
+            embeddings = self.predict_sam(image_pil, boxes)
+            # masks = masks.squeeze(1)
+        # return masks, boxes, phrases, logits
+        return embeddings

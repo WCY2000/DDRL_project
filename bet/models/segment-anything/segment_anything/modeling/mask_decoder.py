@@ -95,12 +95,14 @@ class MaskDecoder(nn.Module):
           torch.Tensor: batched predicted masks
           torch.Tensor: batched predictions of mask quality
         """
-        masks, iou_pred = self.predict_masks(
+        # masks, iou_pred = self.predict_masks(
+        embeddings = self.predict_masks(
             image_embeddings=image_embeddings,
             image_pe=image_pe,
             sparse_prompt_embeddings=sparse_prompt_embeddings,
             dense_prompt_embeddings=dense_prompt_embeddings,
         )
+        return embeddings
 
         # Select the correct mask or masks for output
         if multimask_output:
@@ -138,6 +140,7 @@ class MaskDecoder(nn.Module):
 
         # Run the transformer
         hs, src = self.transformer(src, pos_src, tokens)
+        return src
         iou_token_out = hs[:, 0, :]
         mask_tokens_out = hs[:, 1 : (1 + self.num_mask_tokens), :]
 

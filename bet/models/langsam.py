@@ -1,16 +1,16 @@
 import torchvision
 import torch.nn as nn
 import utils
-from lang_sam import lang_sam
+from lang_sam import LangSAM
 from einops import rearrange
 
 
-class LangSam(nn.Module):
+class LangSamEnc(nn.Module):
     def __init__(
         self,
         pretrained: bool = True,
         freeze_pretrained: bool = True,
-        # output_dim: int = 512,  # fixed for resnet18; included for consistency with config
+        output_dim: int = 512,  # fixed for resnet18; included for consistency with config
     ):
         super().__init__()
         # resnet = torchvision.models.resnet18(pretrained=pretrained)
@@ -19,17 +19,19 @@ class LangSam(nn.Module):
         # self.pretrained = pretrained
         # self.freeze_pretrained = pretrained and freeze_pretrained
         # if self.freeze_pretrained:
-            utils.freeze_module(self.resnet)
+        # utils.freeze_module(self.resnet)
         # x = x.view(64, 3, height, width)
         # self.normalize = torchvision.transforms.Normalize(
         #     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
         # )
-        self.lang_sam = lang_sam
+        self.lang_sam = LangSAM(
+            "vit_b",
+        )
 
     def forward(self, x):
         # if NTCHW, flatten to NCHW first
         print("<<<<< x shape", x.shape)
-        out = self.lang_sam(x)
+        out = self.lang_sam.predict(x, "")
         print("<<<< out shape", out.shape)
         return out
         # is_seq = x.dim() == 5

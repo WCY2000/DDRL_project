@@ -1,0 +1,4 @@
+_target_: models.langsam.LangSamEnc
+output_dim: 512
+pretrained: True
+freeze_pretrained: True

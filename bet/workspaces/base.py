@@ -136,7 +136,7 @@ class Workspace:
             action_history.append(action)
             latent_history.append(latents)
         logging.info(f"Total reward: {total_reward}")
-        # logging.info(f"Final info: {info}")
+        logging.info(f"Final info: {info}")
         return total_reward, obs_history, action_history, latent_history, info
 
     def _report_result_upon_completion(self):

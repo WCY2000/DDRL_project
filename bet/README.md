@@ -9,7 +9,7 @@ cd bet/models/segment-anything
 pip install -e .
 ```
 
-Hard code the trajectory dataset length in RelayKitchenMultiviewTrajectoryDataset class.
+Hard code the trajectory dataset length in RelayKitchenMultiviewTrajectoryDataset class. [line 135 in trajectory_laoder.py]
 
 Then train the model
 ```

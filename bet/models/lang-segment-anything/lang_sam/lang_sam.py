@@ -1,5 +1,6 @@
 import os
 
+from torchvision import transforms
 import groundingdino.datasets.transforms as T
 import numpy as np
 import torch
@@ -120,26 +121,31 @@ class LangSAM:
         transformed_boxes = self.sam.transform.apply_boxes_torch(
             boxes, image_array.shape[:2]
         )
-
-        # Extracting only embeddings not masks
-        # masks, _, _ = self.sam.predict_torch(
         embeddings = self.sam.predict_torch(
             point_coords=None,
             point_labels=None,
             boxes=transformed_boxes.to(self.sam.device),
             multimask_output=False,
         )
-        # return masks.cpu()
-        return embeddings
+        return embeddings.cpu()
 
-    def predict(self, image_pil, text_prompt, box_threshold=0.3, text_threshold=0.25):
-        boxes, logits, phrases = self.predict_dino(
-            image_pil, text_prompt, box_threshold, text_threshold
-        )
-        masks = torch.tensor([])
-        embeddings = torch.tensor([])
-        if len(boxes) > 0:
-            embeddings = self.predict_sam(image_pil, boxes)
-            # masks = masks.squeeze(1)
-        # return masks, boxes, phrases, logits
+    def predict(self, batch_obs, prompts, box_threshold=0.3, text_threshold=0.25):
+        # print(f"batch obs {batch_obs.shape}")
+        # print(prompts)
+        embeddings = []
+        for i, obs in enumerate(batch_obs):
+            image_pil = transforms.functional.to_pil_image(obs)
+            text_prompt = prompts[i]
+            boxes, logits, phrases = self.predict_dino(
+                image_pil, text_prompt, box_threshold, text_threshold
+            )
+            # print(f"boxes shape {boxes.shape}")
+            if len(boxes) > 0:
+                embedding = self.predict_sam(image_pil, boxes)[0]
+                embedding = embedding.reshape(-1)
+                # masks = masks.squeeze(1)
+            # print(f"embedding shape {embedding.shape}")
+            embeddings.append(embedding)
+        embeddings = torch.stack(embeddings)
+        # print(f"embeddings shape {embeddings.shape}")
         return embeddings

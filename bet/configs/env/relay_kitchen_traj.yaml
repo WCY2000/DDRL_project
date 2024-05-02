@@ -8,7 +8,7 @@ action_max: null
 
 # load_dir: "/home/chenyu/Desktop/DDRL_project/bet/exp_local/2024.04.02/113841_kitchen_train" # original
 # load_dir: "/home/chenyu/Desktop/DDRL_project/bet/exp_local/2024.04.11/133911_kitchen_train" #resnet 512
-load_dir: "/home/chenyu/Desktop/DDRL_project/bet/exp_local/2024.04.23/dipvae_64" # dipvae
+# load_dir: "/home/chenyu/Desktop/DDRL_project/bet/exp_local/2024.04.23/dipvae_64" # dipvae
 workspace:
   _target_: workspaces.adept_kitchen.AdeptKitchenWorkspace
 
@@ -17,8 +17,8 @@ dataset_fn:
   data_directory: ${env_vars.datasets.relay_kitchen}
   window_size: ${window_size}
   encoder:
-    _target_: models.dip_vae.DIPVAE
-    output_dim: 64
+    _target_: models.langsam.LangSamEnc
+    output_dim: 1048576
     pretrained: True
     freeze_pretrained: True
 

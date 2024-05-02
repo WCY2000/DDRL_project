@@ -18,6 +18,15 @@ from typing import Union, Callable, Optional
 from tqdm import tqdm
 from decord import VideoReader
 
+ALL_TASKS = [
+    "bottom burner",
+    "top burner",
+    "light switch",
+    "slide cabinet",
+    "hinge cabinet",
+    "microwave",
+    "kettle",
+]
 
 
 class RelayKitchenTrajectoryDataset(TensorDataset):
@@ -31,7 +40,7 @@ class RelayKitchenTrajectoryDataset(TensorDataset):
         #     observations, actions, masks
         # )
         # obs_path = '/nas/datasets/relay_kitchen_dataset/observations_seq_img_multiview'
-        actions, masks = transpose_batch_timestep( actions, masks)
+        actions, masks = transpose_batch_timestep(actions, masks)
         self.masks = masks
         super().__init__(
             torch.from_numpy(observations).to(device).float(),
@@ -51,11 +60,13 @@ class RelayKitchenTrajectoryDataset(TensorDataset):
             result.append(self.actions[i, :T, :])
         return torch.cat(result, dim=0)
 
+
 def transpose_batch_timestep(*args):
     if len(args) == 1:
         return einops.rearrange(args[0], "b t ... -> t b ...")
     else:
         return (einops.rearrange(arg, "b t ... -> t b ...") for arg in args)
+
 
 class RelayKitchenMultiviewTrajectoryDataset(Dataset):
     def __init__(self, data_directory, onehot_goals=True):
@@ -75,7 +86,7 @@ class RelayKitchenMultiviewTrajectoryDataset(Dataset):
         self.masks = masks
 
         print(f"states shape {states.shape}")
-        goal_dir = "/nas/datasets/relay_kitchen_dataset/onehot_goals.pth"
+        goal_dir = "/home/yaswanth/Yaswanth/DDRL_project/bet/datasets/relay_kitchen_dataset/onehot_goals.pth"
         if onehot_goals:
             goals = torch.load(goal_dir)
             print(f" goal shape {goals.shape}")
@@ -96,7 +107,7 @@ class RelayKitchenMultiviewTrajectoryDataset(Dataset):
 
     def get_frames(self, idx, frames):
         T = self.masks[idx].sum().int().item()
-        vid_dir = "/nas/datasets/relay_kitchen_dataset/observations_seq_img_multiview"
+        vid_dir = "/home/yaswanth/Yaswanth/DDRL_project/bet/datasets/relay_kitchen_dataset/observations_seq_img_multiview"
         video_reader = VideoReader(
             str(vid_dir + f"/{idx:03d}_view0.mp4"),
             num_threads=1,
@@ -120,7 +131,9 @@ class RelayKitchenMultiviewTrajectoryDataset(Dataset):
         return self.get_frames(idx, range(self.get_seq_length(idx)))
 
     def __len__(self):
-        return len(self.masks)
+        # return len(self.masks)
+        return 2
+
 
 class CarlaMultipathTrajectoryDataset(Dataset):
     def __init__(
@@ -439,8 +452,8 @@ class TrajectoryRepDataset(Dataset):
         preprocess: Callable[[torch.Tensor], torch.Tensor] = None,
         postprocess: Callable[[torch.Tensor], torch.Tensor] = None,
         device: Union[torch.device, str] = "cuda",
-        batch_size: Optional[int] = 128,
-        onehot_goals=True
+        batch_size: Optional[int] = 16,
+        onehot_goals=True,
     ):
         """
         Given a trajectory dataset, encode its states into representations.
@@ -466,6 +479,9 @@ class TrajectoryRepDataset(Dataset):
             for i in tqdm(range(len(trajectory_dataset))):
                 if onehot_goals:
                     obs, act, mask, goal = trajectory_dataset[i]
+                    classes = torch.argmax(goal, dim=1)
+                    prompts = [ALL_TASKS[idx] for idx in classes]
+                    print(goal.shape)
                     # print(goal[0], obs.shape)
                 else:
                     obs, act, mask = trajectory_dataset[i]
@@ -475,10 +491,19 @@ class TrajectoryRepDataset(Dataset):
                     obs_enc = []
                     for t in range(0, obs.shape[0], batch_size):
                         batch = obs[t : t + batch_size].to(self.device)
-                        obs_enc.append(encoder(batch).cpu())
+                        if onehot_goals:
+                            prompt = prompts[t : t + batch_size]
+                            obs_enc.append(encoder(batch, prompt).cpu())
+                        else:
+                            obs_enc.append(encoder(batch).cpu())
+
                     obs_enc = torch.cat(obs_enc, dim=0)
                 else:
-                    obs_enc = encoder(obs.to(self.device)).cpu()
+                    if onehot_goals:
+                        obs_enc = encoder(obs.to(self.device), prompts).cpu()
+                        print(f" obs shape {obs_enc.shape}")
+                    else:
+                        obs_enc = encoder(obs.to(self.device)).cpu()
                 self.obs.append(obs_enc)
                 self.actions.append(act)
                 self.masks.append(mask)
@@ -490,8 +515,10 @@ class TrajectoryRepDataset(Dataset):
 
     def __getitem__(self, idx):
         obs = self.obs[idx]
+        # print(f"getting new index {obs.shape}")
         if self.postprocess is not None:
             obs = self.postprocess(obs)
+        # print(f"getting new after post rpocessindex {obs.shape}")
         return (obs, self.actions[idx], self.masks[idx])
 
     def get_seq_length(self, idx):
@@ -573,7 +600,7 @@ def get_carla_multipath_dataset(
     random_seed=42,
     device="cpu",
     window_size=10,
-    preprocess_to_float: bool = False,
+    process_to_float: bool = False,
 ):
     train_set, val_set = split_datasets(
         CarlaMultipathTrajectoryDataset(
@@ -647,7 +674,6 @@ def get_carla_multipath_rep_dataset(
     ), TrajectorySlicerSubset(val_set, window=window_size)
 
 
-
 def get_relay_kitchen_multiview_train_val(
     data_directory,
     train_fraction=0.9,
@@ -660,9 +686,7 @@ def get_relay_kitchen_multiview_train_val(
     postprocess: Callable[[torch.Tensor], torch.Tensor] = None,
 ):
     dataset = TrajectoryRepDataset(
-        RelayKitchenMultiviewTrajectoryDataset(
-            data_directory
-        ),
+        RelayKitchenMultiviewTrajectoryDataset(data_directory),
         encoder,
         preprocess=preprocess,
         postprocess=postprocess,

@@ -1,6 +1,6 @@
 defaults:
   - _self_
-  - encoder: resnet
+  - encoder: langsam
   - action_ae: discretizers/k_means_kitchen_best
   - env: relay_kitchen_traj
   - state_prior: mingpt_kitchen_best

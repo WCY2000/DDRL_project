@@ -28,11 +28,11 @@ class LangSamEnc(nn.Module):
             "vit_b",
         )
 
-    def forward(self, x):
+    def forward(self, x, prompts):
         # if NTCHW, flatten to NCHW first
-        print("<<<<< x shape", x.shape)
-        out = self.lang_sam.predict(x, "")
-        print("<<<< out shape", out.shape)
+        # print("<<<<< x shape", x.shape)
+        out = self.lang_sam.predict(x, prompts)
+        # print("<<<< out shape", out.shape)
         return out
         # is_seq = x.dim() == 5
         # if is_seq:

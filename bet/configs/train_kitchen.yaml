@@ -1,6 +1,6 @@
 defaults:
   - _self_
-  - encoder: resnet
+  - encoder: langsam
   - action_ae: discretizers/k_means_kitchen_best
   - env: relay_kitchen_traj
   - state_prior: mingpt_kitchen_best
@@ -10,7 +10,7 @@ lazy_init_models: True
 
 # Dataset details
 train_fraction: 0.95
-batch_size: 64
+batch_size: 2
 num_workers: 32
 window_size: 10
 

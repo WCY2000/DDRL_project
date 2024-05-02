@@ -118,15 +118,22 @@ class LangSAM:
     def predict_sam(self, image_pil, boxes):
         image_array = np.asarray(image_pil)
         self.sam.set_image(image_array)
-        transformed_boxes = self.sam.transform.apply_boxes_torch(
-            boxes, image_array.shape[:2]
-        )
-        embeddings = self.sam.predict_torch(
-            point_coords=None,
-            point_labels=None,
-            boxes=transformed_boxes.to(self.sam.device),
-            multimask_output=False,
-        )
+        if len(boxes) > 0:
+            transformed_boxes = self.sam.transform.apply_boxes_torch(
+                boxes, image_array.shape[:2]
+            )
+            embeddings = self.sam.predict_torch(
+                point_coords=None,
+                point_labels=None,
+                boxes=transformed_boxes.to(self.sam.device),
+                multimask_output=False,
+            )
+        else:
+            embeddings = self.sam.predict_torch(
+                point_coords=None,
+                point_labels=None,
+                multimask_output=False,
+            )
         return embeddings.cpu()
 
     def predict(self, batch_obs, prompts, box_threshold=0.3, text_threshold=0.25):
@@ -140,10 +147,14 @@ class LangSAM:
                 image_pil, text_prompt, box_threshold, text_threshold
             )
             # print(f"boxes shape {boxes.shape}")
-            if len(boxes) > 0:
-                embedding = self.predict_sam(image_pil, boxes)[0]
-                embedding = embedding.reshape(-1)
-                # masks = masks.squeeze(1)
+            # if len(boxes) > 0:
+            embedding = self.predict_sam(image_pil, boxes)[0]
+            embedding = embedding.reshape(-1)
+            # else:
+            #     embedding = self.predict_sam(image_pil)[0]
+            #     embedding = embedding.reshape(-1)
+            #     print("Encoding without boxes")
+            # masks = masks.squeeze(1)
             # print(f"embedding shape {embedding.shape}")
             embeddings.append(embedding)
         embeddings = torch.stack(embeddings)
